@@ -1,0 +1,62 @@
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+public class Wall implements Structure {
+    private List<Block> blocks;
+
+    public Wall(List<Block> blocks) {
+        this.blocks = blocks;
+    }
+
+    @Override
+    public Optional<Block> findBlockByColor(String color) {
+        return findBlockByColor(blocks, color);
+    }
+
+    private Optional<Block> findBlockByColor(List<Block> blocks, String color) {
+        for (Block block : blocks) {
+            if (block.getColor().equals(color)) {
+                return Optional.of(block);
+            }
+            if (block instanceof CompositeBlock) {
+                Optional<Block> found = findBlockByColor(((CompositeBlock) block).getBlocks(), color);
+                if (found.isPresent()) {
+                    return found;
+                }
+            }
+        }
+        return Optional.empty();
+    }
+
+    @Override
+    public List<Block> findBlocksByMaterial(String material) {
+        return findBlocksByMaterial(blocks, material);
+    }
+
+    private List<Block> findBlocksByMaterial(List<Block> blocks, String material) {
+        List<Block> result = new ArrayList<>();
+        for (Block block : blocks) {
+            if (block.getMaterial().equals(material)) {
+                result.add(block);
+            }
+            if (block instanceof CompositeBlock) {
+                result.addAll(findBlocksByMaterial(((CompositeBlock) block).getBlocks(), material));
+            }
+        }
+        return result;
+    }
+
+    @Override
+    public int count() {
+        return countBlocks(blocks);
+    }
+
+    private int countBlocks(List<Block> blocks) {
+        return blocks.stream().mapToInt(block -> 
+            block instanceof CompositeBlock ? 
+            countBlocks(((CompositeBlock) block).getBlocks()) + 1 : 1
+        ).sum();
+    }
+}
